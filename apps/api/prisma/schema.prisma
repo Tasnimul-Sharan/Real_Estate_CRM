@@ -1,0 +1,234 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  SALES_MANAGER
+  SALES_EXECUTIVE
+  ACCOUNTS
+  VIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  COMPLETED
+  ON_HOLD
+}
+enum PlotStatus {
+  AVAILABLE
+  HOLD
+  BOOKED
+  SOLD
+  BLOCKED
+}
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  SITE_VISIT
+  NEGOTIATION
+  BOOKED
+  WON
+  LOST
+}
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+enum LeadSource {
+  FACEBOOK
+  GOOGLE
+  WEBSITE
+  WALK_IN
+  REFERRAL
+  CALL
+  WHATSAPP
+  EVENT
+  OTHER
+}
+enum ActivityType {
+  CALL
+  WHATSAPP
+  EMAIL
+  MEETING
+  SITE_VISIT
+  NOTE
+  FOLLOW_UP
+}
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  CHEQUE
+  CARD
+  MOBILE_BANKING
+  OTHER
+}
+
+model User {
+  id           String      @id @default(cuid())
+  name         String
+  email        String      @unique
+  phone        String?
+  passwordHash String
+  role         Role        @default(SALES_EXECUTIVE)
+  status       UserStatus  @default(ACTIVE)
+  leads        Lead[]      @relation("LeadAssignee")
+  activities   Activity[]
+  bookings     Booking[]   @relation("SalesUser")
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  code        String        @unique
+  location    String
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  totalArea   Decimal?      @db.Decimal(12, 2)
+  blocks      Block[]
+  plots       Plot[]
+  leads       Lead[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Block {
+  id        String   @id @default(cuid())
+  name      String
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  plots     Plot[]
+  createdAt DateTime @default(now())
+  @@unique([projectId, name])
+}
+
+model Plot {
+  id            String     @id @default(cuid())
+  projectId     String
+  blockId       String?
+  plotNo        String
+  sizeKatha     Decimal    @db.Decimal(10, 2)
+  pricePerKatha Decimal    @db.Decimal(14, 2)
+  totalPrice    Decimal    @db.Decimal(16, 2)
+  status        PlotStatus @default(AVAILABLE)
+  facing        String?
+  roadWidthFt   Int?
+  notes         String?
+  project       Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  block         Block?     @relation(fields: [blockId], references: [id], onDelete: SetNull)
+  bookings      Booking[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  @@unique([projectId, plotNo])
+  @@index([status])
+}
+
+model Customer {
+  id          String    @id @default(cuid())
+  name        String
+  phone       String    @unique
+  email       String?
+  address     String?
+  occupation  String?
+  nrbCountry  String?
+  source      LeadSource?
+  notes       String?
+  leads       Lead[]
+  bookings    Booking[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Lead {
+  id                 String      @id @default(cuid())
+  name               String
+  phone              String
+  email              String?
+  source             LeadSource  @default(OTHER)
+  status             LeadStatus  @default(NEW)
+  priority           Priority    @default(MEDIUM)
+  budget             Decimal?    @db.Decimal(16, 2)
+  minSizeKatha       Decimal?    @db.Decimal(10, 2)
+  maxSizeKatha       Decimal?    @db.Decimal(10, 2)
+  notes              String?
+  nextFollowUpAt     DateTime?
+  preferredProjectId String?
+  assignedToId       String?
+  customerId         String?
+  preferredProject   Project?    @relation(fields: [preferredProjectId], references: [id], onDelete: SetNull)
+  assignedTo         User?       @relation("LeadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  customer           Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  activities         Activity[]
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  @@index([status])
+  @@index([assignedToId])
+  @@index([nextFollowUpAt])
+}
+
+model Activity {
+  id             String       @id @default(cuid())
+  leadId         String
+  userId         String
+  type           ActivityType
+  note           String
+  nextFollowUpAt DateTime?
+  lead           Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id])
+  createdAt      DateTime     @default(now())
+  @@index([leadId, createdAt])
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  plotId        String
+  customerId    String
+  salesUserId   String
+  bookingAmount Decimal       @db.Decimal(16, 2)
+  bookedAt      DateTime      @default(now())
+  status        BookingStatus @default(CONFIRMED)
+  notes         String?
+  plot          Plot          @relation(fields: [plotId], references: [id])
+  customer      Customer      @relation(fields: [customerId], references: [id])
+  salesUser     User          @relation("SalesUser", fields: [salesUserId], references: [id])
+  payments      Payment[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  @@index([plotId])
+  @@index([customerId])
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  bookingId   String
+  amount      Decimal       @db.Decimal(16, 2)
+  paymentDate DateTime      @default(now())
+  method      PaymentMethod
+  referenceNo String?
+  note        String?
+  booking     Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+  @@index([bookingId])
+}

@@ -1,0 +1,4 @@
+export const API=process.env.NEXT_PUBLIC_API_URL||'http://localhost:4000/api';
+export function token(){return typeof window==='undefined'?null:localStorage.getItem('crm_token')}
+export async function api<T=any>(path:string,options:RequestInit={}){const headers:any={'Content-Type':'application/json',...(options.headers||{})};const t=token();if(t)headers.Authorization=`Bearer ${t}`;const res=await fetch(`${API}${path}`,{...options,headers,cache:'no-store'});if(res.status===401&&typeof window!=='undefined'){localStorage.removeItem('crm_token');localStorage.removeItem('crm_user');if(location.pathname!=='/')location.href='/'}if(!res.ok){let msg='Request failed';try{const x=await res.json();msg=Array.isArray(x.message)?x.message.join(', '):(x.message||msg)}catch{}throw new Error(msg)}return res.json() as Promise<T>}
+export const money=(n:any)=>new Intl.NumberFormat('en-BD',{style:'currency',currency:'BDT',maximumFractionDigits:0}).format(Number(n||0));

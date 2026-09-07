@@ -1,0 +1,2 @@
+import { Injectable } from '@nestjs/common'; import { PrismaService } from '../prisma/prisma.service'; import { CreatePaymentDto } from './dto/payment.dto';
+@Injectable() export class PaymentsService{constructor(private p:PrismaService){} list(bookingId?:string){return this.p.payment.findMany({where:bookingId?{bookingId}:undefined,include:{booking:{include:{customer:true,plot:{include:{project:true}}}}},orderBy:{paymentDate:'desc'}})} create(d:CreatePaymentDto){return this.p.payment.create({data:{...d,paymentDate:d.paymentDate?new Date(d.paymentDate):new Date()} as any})}}

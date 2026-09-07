@@ -1,0 +1,3 @@
+import { IsEmail, IsEnum, IsOptional, IsString } from 'class-validator'; import { LeadSource } from '@prisma/client';
+export class CreateCustomerDto { @IsString() name!:string; @IsString() phone!:string; @IsOptional() @IsEmail() email?:string; @IsOptional() @IsString() address?:string; @IsOptional() @IsString() occupation?:string; @IsOptional() @IsString() nrbCountry?:string; @IsOptional() @IsEnum(LeadSource) source?:LeadSource; @IsOptional() @IsString() notes?:string; }
+export class UpdateCustomerDto { @IsOptional() @IsString() name?:string; @IsOptional() @IsEmail() email?:string; @IsOptional() @IsString() address?:string; @IsOptional() @IsString() occupation?:string; @IsOptional() @IsString() nrbCountry?:string; @IsOptional() @IsString() notes?:string; }
