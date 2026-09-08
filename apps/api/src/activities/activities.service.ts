@@ -1,2 +1,35 @@
-import { Injectable } from '@nestjs/common'; import { PrismaService } from '../prisma/prisma.service'; import { CreateActivityDto } from './dto/activity.dto';
-@Injectable() export class ActivitiesService{constructor(private p:PrismaService){} async create(userId:string,d:CreateActivityDto){return this.p.$transaction(async tx=>{const activity=await tx.activity.create({data:{leadId:d.leadId,userId,type:d.type,note:d.note,nextFollowUpAt:d.nextFollowUpAt?new Date(d.nextFollowUpAt):undefined}}); if(d.nextFollowUpAt) await tx.lead.update({where:{id:d.leadId},data:{nextFollowUpAt:new Date(d.nextFollowUpAt)}}); return activity;})} list(leadId:string){return this.p.activity.findMany({where:{leadId},include:{user:{select:{name:true}}},orderBy:{createdAt:'desc'}})}}
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateActivityDto } from "./dto/activity.dto";
+@Injectable()
+export class ActivitiesService {
+  constructor(private p: PrismaService) {}
+  async create(userId: string, d: CreateActivityDto) {
+    return this.p.$transaction(async (tx) => {
+      const activity = await tx.activity.create({
+        data: {
+          leadId: d.leadId,
+          userId,
+          type: d.type,
+          note: d.note,
+          nextFollowUpAt: d.nextFollowUpAt
+            ? new Date(d.nextFollowUpAt)
+            : undefined,
+        },
+      });
+      if (d.nextFollowUpAt)
+        await tx.lead.update({
+          where: { id: d.leadId },
+          data: { nextFollowUpAt: new Date(d.nextFollowUpAt) },
+        });
+      return activity;
+    });
+  }
+  list(leadId: string) {
+    return this.p.activity.findMany({
+      where: { leadId },
+      include: { user: { select: { name: true } } },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+}
