@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import Icon from "@/components/Icon";
 import Topbar from "@/components/Topbar";
 import Modal from "@/components/Modal";
 import { api } from "@/lib/api";
@@ -47,7 +48,7 @@ export default function Projects() {
         title="Projects"
         action={
           <button className="btn" onClick={() => setOpen(true)}>
-            + New Project
+            <Icon name="plus" size={16} /> New Project
           </button>
         }
       />

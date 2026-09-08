@@ -1,6 +1,7 @@
 "use client";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Icon from "@/components/Icon";
 import { api } from "@/lib/api";
 export default function Login() {
   const r = useRouter();
@@ -31,35 +32,19 @@ export default function Login() {
   }
   return (
     <main className="login">
-      <form className="login-card" onSubmit={submit}>
-        <div className="brand">Real Estate CRM</div>
-        <p className="muted">
-          Secure sales, lead, plot and payment management.
-        </p>
-        {error && <div className="error">{error}</div>}
-        <div className="field">
-          <label htmlFor="page-tsx-email">Email</label>
-          <input id="page-tsx-email" name="page-tsx-email" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-        <div className="field">
-          <label htmlFor="page-tsx-password">Password</label>
-          <input id="page-tsx-password" name="page-tsx-password"
-            type="password" autoComplete="current-password" required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <button
-          className="btn"
-          disabled={loading}
-          style={{ width: "100%", marginTop: 8 }}
-        >
-          {loading ? "Signing in..." : "Sign in"}
-        </button>
-        <p className="muted" style={{ fontSize: 12 }}>
-          Demo: admin@crm.local / Admin@12345
-        </p>
-      </form>
+      <section className="login-story">
+        <div className="brand-lockup"><span className="brand-mark"><Icon name="building" size={25} /></span><span className="brand-copy">Real Estate<span>CRM WORKSPACE</span></span></div>
+        <div className="login-message"><div className="eyebrow">SPACE FOR YOUR BUSINESS TO GROW</div><h1>Great properties.<br />Stronger relationships.</h1><p>Bring your people, properties and sales together in one thoughtfully organized workspace.</p><div className="login-features"><div><Icon name="leads" size={19} /> Turn conversations into opportunities</div><div><Icon name="plots" size={19} /> Keep your property portfolio in view</div><div><Icon name="wallet" size={19} /> Stay on top of bookings and collections</div></div></div>
+        <div className="login-story-footer">REAL ESTATE CRM · YOUR BUSINESS, CONNECTED.</div><div className="login-decoration" />
+      </section>
+      <div className="login-panel"><form className="login-card" onSubmit={submit}>
+        <span className="login-greeting"><Icon name="home" size={24} /></span><h2>Welcome back.</h2><p>Sign in to your real estate workspace.</p>
+        {error && <div className="error" role="alert">{error}</div>}
+        <div className="field"><label htmlFor="login-email">Email address</label><input id="login-email" name="email" type="email" autoComplete="username" required value={email} onChange={e=>setEmail(e.target.value)} /></div>
+        <div className="field"><label htmlFor="login-password">Password</label><input id="login-password" name="password" type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)} /></div>
+        <button className="btn" disabled={loading}>{loading ? "Signing in..." : "Sign in"}<Icon name="arrow" size={17} /></button>
+        <div className="demo-note"><Icon name="shield" size={16} /><div><strong>Exploring the demo?</strong><br />admin@crm.local / Admin@12345</div></div>
+      </form></div>
     </main>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import Icon from "@/components/Icon";
 import Topbar from "@/components/Topbar";
 import Modal from "@/components/Modal";
 import { api, money } from "@/lib/api";
@@ -58,7 +59,7 @@ export default function Plots() {
         title="Plot Inventory"
         action={
           <button className="btn" onClick={() => setOpen(true)}>
-            + New Plot
+            <Icon name="plus" size={16} /> New Plot
           </button>
         }
       />

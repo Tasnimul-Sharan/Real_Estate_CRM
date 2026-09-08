@@ -1,6 +1,7 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useId, useState } from "react";
 import Link from "next/link";
+import Icon from "@/components/Icon";
 import Topbar from "@/components/Topbar";
 import Modal from "@/components/Modal";
 import { api, money } from "@/lib/api";
@@ -59,7 +60,7 @@ export default function Leads() {
         title="Leads"
         action={
           <button className="btn" onClick={() => setOpen(true)}>
-            + New Lead
+            <Icon name="plus" size={16} /> New Lead
           </button>
         }
       />
@@ -73,7 +74,7 @@ export default function Leads() {
               onChange={(e) => setQ(e.target.value)}
             />
             <button className="btn secondary" onClick={() => load(q)}>
-              Search
+              <Icon name="search" size={15} /> Search
             </button>
           </div>
           <div className="muted">{list.length} leads</div>
@@ -98,7 +99,7 @@ export default function Leads() {
                   <td>
                     <Link
                       href={`/leads/${x.id}`}
-                      style={{ fontWeight: 800, color: "#274d9b" }}
+                      style={{ fontWeight: 600, color: "var(--teal)" }}
                     >
                       {x.name}
                     </Link>

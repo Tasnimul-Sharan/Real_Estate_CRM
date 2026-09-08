@@ -1,4 +1,5 @@
 "use client";
+import Icon from "./Icon";
 import { useEffect, useId, useRef } from "react";
 export default function Modal({
   title,
@@ -55,9 +56,7 @@ export default function Modal({
       >
         <div className="modal-head">
           <h2 id={titleId}>{title}</h2>
-          <button type="button" className="btn secondary" onClick={onClose}>
-            Close
-          </button>
+          <button type="button" className="btn secondary" aria-label="Close" onClick={onClose}><Icon name="close" size={20} /></button>
         </div>
         {children}
       </div>

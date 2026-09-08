@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import Icon from "@/components/Icon";
 import Topbar from "@/components/Topbar";
 import Modal from "@/components/Modal";
 import { api } from "@/lib/api";
@@ -52,7 +53,7 @@ export default function Customers() {
         title="Customers"
         action={
           <button className="btn" onClick={() => setOpen(true)}>
-            + New Customer
+            <Icon name="plus" size={16} /> New Customer
           </button>
         }
       />
@@ -66,7 +67,7 @@ export default function Customers() {
               onChange={(e) => setQ(e.target.value)}
             />
             <button className="btn secondary" onClick={() => load(q)}>
-              Search
+              <Icon name="search" size={15} /> Search
             </button>
           </div>
           <div className="muted">{list.length} customers</div>

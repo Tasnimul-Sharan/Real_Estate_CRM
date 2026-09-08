@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import Icon from "@/components/Icon";
 import Topbar from "@/components/Topbar";
 import Modal from "@/components/Modal";
 import { api, money } from "@/lib/api";
@@ -51,7 +52,7 @@ export default function Payments() {
         title="Payments"
         action={
           <button className="btn" onClick={() => setOpen(true)}>
-            + Record Payment
+            <Icon name="plus" size={16} /> Record Payment
           </button>
         }
       />
