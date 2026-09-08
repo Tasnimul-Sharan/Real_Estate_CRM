@@ -2,6 +2,7 @@
 import { FormEvent, useCallback, useEffect, useId, useState } from "react";
 import Link from "next/link";
 import Icon from "@/components/Icon";
+import { usePermissions } from "@/lib/permissions";
 import Topbar from "@/components/Topbar";
 import Modal from "@/components/Modal";
 import { api, money } from "@/lib/api";
@@ -17,6 +18,7 @@ const init = {
   notes: "",
 };
 export default function Leads() {
+  const permissions = usePermissions();
   const [list, setList] = useState<any[]>([]),
     [projects, setProjects] = useState<any[]>([]),
     [users, setUsers] = useState<any[]>([]),
@@ -58,11 +60,11 @@ export default function Leads() {
     <>
       <Topbar
         title="Leads"
-        action={
+        action={permissions.sales && (
           <button className="btn" onClick={() => setOpen(true)}>
             <Icon name="plus" size={16} /> New Lead
           </button>
-        }
+        )}
       />
       {error && <div className="error">{error}</div>}
       <div className="card">
@@ -121,6 +123,7 @@ export default function Leads() {
       </div>
       {open && (
         <Modal title="Create Lead" onClose={() => setOpen(false)}>
+          {error && <div className="error" role="alert">{error}</div>}
           <form onSubmit={submit} className="form-grid">
             <F
               l="Full name"

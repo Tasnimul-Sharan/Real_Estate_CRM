@@ -89,6 +89,7 @@ export default function Users() {
       </div>
       {open && (
         <Modal title="Create User" onClose={() => setOpen(false)}>
+          {err && <div className="error" role="alert">{err}</div>}
           <form className="form-grid" onSubmit={save}>
             {[
               ["Name", "name", "text"],

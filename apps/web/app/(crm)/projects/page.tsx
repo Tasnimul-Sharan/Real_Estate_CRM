@@ -1,6 +1,7 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Icon from "@/components/Icon";
+import { usePermissions } from "@/lib/permissions";
 import Topbar from "@/components/Topbar";
 import Modal from "@/components/Modal";
 import { api } from "@/lib/api";
@@ -13,6 +14,7 @@ const init = {
   totalArea: "",
 };
 export default function Projects() {
+  const permissions = usePermissions();
   const [list, setList] = useState<any[]>([]),
     [open, setOpen] = useState(false),
     [f, setF] = useState<any>(init),
@@ -46,11 +48,11 @@ export default function Projects() {
     <>
       <Topbar
         title="Projects"
-        action={
+        action={permissions.inventory && (
           <button className="btn" onClick={() => setOpen(true)}>
             <Icon name="plus" size={16} /> New Project
           </button>
-        }
+        )}
       />
       {err && <div className="error">{err}</div>}
       <div className="grid stats">
@@ -76,6 +78,7 @@ export default function Projects() {
       </div>
       {open && (
         <Modal title="Create Project" onClose={() => setOpen(false)}>
+          {err && <div className="error" role="alert">{err}</div>}
           <form className="form-grid" onSubmit={save}>
             {[
               ["Name", "name"],

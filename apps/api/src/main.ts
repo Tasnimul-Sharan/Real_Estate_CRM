@@ -12,7 +12,7 @@ async function bootstrap() {
   app.enableCors({ origin: process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:3000'], credentials: true });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }));
   const config = new DocumentBuilder().setTitle('Real Estate CRM API').setDescription('CRM REST API').setVersion('1.0').addBearerAuth().build();
-  SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, config));
+  if (process.env.ENABLE_API_DOCS === 'true') SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, config));
   await app.listen(Number(process.env.PORT || 4000));
 }
 bootstrap();

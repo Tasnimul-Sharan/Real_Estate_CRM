@@ -1,9 +1,11 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { usePermissions } from "@/lib/permissions";
 import Topbar from "@/components/Topbar";
 import { api, money } from "@/lib/api";
 export default function LeadDetail() {
+  const permissions = usePermissions();
   const { id } = useParams<{ id: string }>();
   const [d, setD] = useState<any>(null),
     [err, setErr] = useState(""),
@@ -21,6 +23,12 @@ export default function LeadDetail() {
   useEffect(() => {
     if (id) load();
   }, [id, load]);
+  const [converting, setConverting] = useState(false);
+  async function convert() {
+    setConverting(true); setErr('');
+    try { await api(`/leads/${id}/convert`, {method:'POST',body:'{}'}); await load(); }
+    catch(e:any) { setErr(e.message); } finally { setConverting(false); }
+  }
   async function stage() {
     try {
       await api(`/leads/${id}`, {
@@ -53,7 +61,7 @@ export default function LeadDetail() {
   }
   return (
     <>
-      <Topbar title={d?.name || "Lead Detail"} />
+      <Topbar title={d?.name || "Lead Detail"} action={permissions.sales && d && !d.customerId && <button className="btn" disabled={converting} onClick={convert}>{converting ? "Converting..." : "Convert to customer"}</button>} />
       {err && <div className="error">{err}</div>}
       {!d ? (
         <div className="card">Loading...</div>
@@ -67,6 +75,7 @@ export default function LeadDetail() {
               </div>
               <div className="form-grid">
                 <Info l="Phone" v={d.phone} />
+                <Info l="Linked customer" v={d.customer?.name || "Not converted yet"} />
                 <Info l="Email" v={d.email || "—"} />
                 <Info l="Source" v={d.source} />
                 <Info l="Priority" v={d.priority} />
@@ -90,7 +99,7 @@ export default function LeadDetail() {
                 className="toolbar"
                 style={{ marginTop: 14, marginBottom: 0 }}
               >
-                <select aria-label="Lead stage" name="lead-stage"
+                <select disabled={!permissions.sales} aria-label="Lead stage" name="lead-stage"
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                 >
@@ -107,7 +116,7 @@ export default function LeadDetail() {
                     <option key={x}>{x}</option>
                   ))}
                 </select>
-                <button className="btn" onClick={stage}>
+                <button className="btn" disabled={!permissions.sales} onClick={stage}>
                   Update Stage
                 </button>
               </div>
@@ -159,6 +168,7 @@ export default function LeadDetail() {
               <h2>Log Activity</h2>
             </div>
             <form onSubmit={activity}>
+              <fieldset disabled={!permissions.sales} style={{border:0,padding:0,margin:0,minWidth:0}}>
               <div className="field">
                 <label htmlFor="-crm-leads-id-type">Type</label>
                 <select id="-crm-leads-id-type" name="-crm-leads-id-type" value={type} onChange={(e) => setType(e.target.value)}>
@@ -195,6 +205,7 @@ export default function LeadDetail() {
               <button className="btn" style={{ width: "100%" }}>
                 Save Activity
               </button>
+            </fieldset>
             </form>
           </div>
         </div>

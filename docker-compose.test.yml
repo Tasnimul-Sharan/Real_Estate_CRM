@@ -1,0 +1,39 @@
+name: real_estate_crm_test
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: realestate_crm_test
+      POSTGRES_USER: crm_test
+      POSTGRES_PASSWORD: isolated-test-database-only
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crm_test -d realestate_crm_test"]
+      interval: 2s
+      retries: 30
+  api:
+    build: ./apps/api
+    environment:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://crm_test:isolated-test-database-only@db:5432/realestate_crm_test?schema=public
+      JWT_SECRET: isolated-test-jwt-secret-at-least-32-characters
+      CORS_ORIGIN: http://localhost:3100
+      ADMIN_EMAIL: admin@crm.test
+      ADMIN_PASSWORD: IsolatedTestPassword-2026!
+    command: ["sh", "-c", "npx prisma migrate deploy && node scripts/bootstrap-admin.cjs && node dist/main"]
+    ports:
+      - "127.0.0.1:4100:4000"
+    depends_on:
+      db:
+        condition: service_healthy
+  tests:
+    build: ./apps/api
+    environment:
+      DATABASE_URL: postgresql://crm_test:isolated-test-database-only@db:5432/realestate_crm_test?schema=public
+      TEST_API_URL: http://api:4000/api
+      ADMIN_EMAIL: admin@crm.test
+      ADMIN_PASSWORD: IsolatedTestPassword-2026!
+    command: ["node", "--test", "--test-concurrency=1", "test/workflow.test.cjs"]
+    depends_on:
+      - api

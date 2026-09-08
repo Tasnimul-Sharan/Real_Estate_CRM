@@ -8,9 +8,11 @@
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main",
     "prisma:generate": "prisma generate",
-    "prisma:push": "prisma db push",
     "prisma:seed": "tsx prisma/seed.ts",
-    "typecheck": "tsc --noEmit -p tsconfig.build.json"
+    "typecheck": "tsc --noEmit -p tsconfig.build.json",
+    "prisma:migrate": "prisma migrate deploy",
+    "bootstrap:admin": "node scripts/bootstrap-admin.cjs",
+    "test:e2e": "node --test --test-concurrency=1 test/workflow.test.cjs"
   },
   "dependencies": {
     "@nestjs/common": "11.2.3",

@@ -1,10 +1,12 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Icon from "@/components/Icon";
+import { usePermissions } from "@/lib/permissions";
 import Topbar from "@/components/Topbar";
 import Modal from "@/components/Modal";
 import { api, money } from "@/lib/api";
 export default function Payments() {
+  const permissions = usePermissions();
   const [list, setList] = useState<any[]>([]),
     [bookings, setBookings] = useState<any[]>([]),
     [open, setOpen] = useState(false),
@@ -50,11 +52,11 @@ export default function Payments() {
     <>
       <Topbar
         title="Payments"
-        action={
+        action={permissions.payments && (
           <button className="btn" onClick={() => setOpen(true)}>
             <Icon name="plus" size={16} /> Record Payment
           </button>
-        }
+        )}
       />
       {err && <div className="error">{err}</div>}
       <div className="card">
@@ -91,6 +93,7 @@ export default function Payments() {
       </div>
       {open && (
         <Modal title="Record Payment" onClose={() => setOpen(false)}>
+          {err && <div className="error" role="alert">{err}</div>}
           <form className="form-grid" onSubmit={save}>
             <div className="field full">
               <label htmlFor="-crm-payments-booking">Booking</label>
@@ -110,7 +113,7 @@ export default function Payments() {
               <label htmlFor="-crm-payments-amount">Amount</label>
               <input id="-crm-payments-amount" name="-crm-payments-amount"
                 required
-                type="number"
+                type="number" min="0.01" step="0.01"
                 value={f.amount}
                 onChange={(e) => setF({ ...f, amount: e.target.value })}
               />

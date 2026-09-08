@@ -1,6 +1,7 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Icon from "@/components/Icon";
+import { usePermissions } from "@/lib/permissions";
 import Topbar from "@/components/Topbar";
 import Modal from "@/components/Modal";
 import { api, money } from "@/lib/api";
@@ -14,6 +15,7 @@ const init = {
   roadWidthFt: "",
 };
 export default function Plots() {
+  const permissions = usePermissions();
   const [list, setList] = useState<any[]>([]),
     [projects, setProjects] = useState<any[]>([]),
     [open, setOpen] = useState(false),
@@ -57,11 +59,11 @@ export default function Plots() {
     <>
       <Topbar
         title="Plot Inventory"
-        action={
+        action={permissions.inventory && (
           <button className="btn" onClick={() => setOpen(true)}>
             <Icon name="plus" size={16} /> New Plot
           </button>
-        }
+        )}
       />
       {err && <div className="error">{err}</div>}
       <div className="card">
@@ -118,6 +120,7 @@ export default function Plots() {
       </div>
       {open && (
         <Modal title="Add Plot" onClose={() => setOpen(false)}>
+          {err && <div className="error" role="alert">{err}</div>}
           <form className="form-grid" onSubmit={save}>
             <div className="field full">
               <label htmlFor="-crm-plots-project">Project</label>

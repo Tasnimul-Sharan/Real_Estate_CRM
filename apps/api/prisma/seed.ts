@@ -4,11 +4,13 @@ import * as bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  const passwordHash = await bcrypt.hash('Admin@12345', 12);
+  if (process.env.SEED_DEMO !== 'true' || process.env.NODE_ENV === 'production') throw new Error('Demo seeding requires SEED_DEMO=true outside production');
+  if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD.length < 16) throw new Error('Set ADMIN_EMAIL and ADMIN_PASSWORD (16+ characters)');
+  const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@crm.local' },
+    where: { email: process.env.ADMIN_EMAIL },
     update: {},
-    create: { name: 'CRM Administrator', email: 'admin@crm.local', passwordHash, role: Role.SUPER_ADMIN },
+    create: { name: 'CRM Administrator', email: process.env.ADMIN_EMAIL, passwordHash, role: Role.SUPER_ADMIN },
   });
 
   const project = await prisma.project.upsert({
@@ -36,4 +38,4 @@ async function main() {
   if (!existing) await prisma.lead.create({ data: { name: 'Sample Lead', phone: '01700000000', source: LeadSource.FACEBOOK, status: LeadStatus.NEW, priority: Priority.HIGH, assignedToId: admin.id, preferredProjectId: project.id, budget: 10000000 } });
 }
 
-main().finally(() => prisma.$disconnect());
+main().catch(e => { console.error(e.message); process.exitCode = 1; }).finally(() => prisma.$disconnect());

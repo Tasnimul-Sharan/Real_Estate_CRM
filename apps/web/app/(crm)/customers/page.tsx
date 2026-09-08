@@ -1,6 +1,7 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Icon from "@/components/Icon";
+import { usePermissions } from "@/lib/permissions";
 import Topbar from "@/components/Topbar";
 import Modal from "@/components/Modal";
 import { api } from "@/lib/api";
@@ -14,6 +15,7 @@ const init = {
   notes: "",
 };
 export default function Customers() {
+  const permissions = usePermissions();
   const [list, setList] = useState<any[]>([]),
     [open, setOpen] = useState(false),
     [f, setF] = useState<any>(init),
@@ -51,11 +53,11 @@ export default function Customers() {
     <>
       <Topbar
         title="Customers"
-        action={
+        action={permissions.sales && (
           <button className="btn" onClick={() => setOpen(true)}>
             <Icon name="plus" size={16} /> New Customer
           </button>
-        }
+        )}
       />
       {err && <div className="error">{err}</div>}
       <div className="card">
@@ -103,6 +105,7 @@ export default function Customers() {
       </div>
       {open && (
         <Modal title="Create Customer" onClose={() => setOpen(false)}>
+          {err && <div className="error" role="alert">{err}</div>}
           <form onSubmit={save} className="form-grid">
             {[
               ["Name", "name"],

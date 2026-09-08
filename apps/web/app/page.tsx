@@ -5,8 +5,8 @@ import Icon from "@/components/Icon";
 import { api } from "@/lib/api";
 export default function Login() {
   const r = useRouter();
-  const [email, setEmail] = useState("admin@crm.local");
-  const [password, setPassword] = useState("Admin@12345");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   useEffect(() => {
@@ -43,7 +43,7 @@ export default function Login() {
         <div className="field"><label htmlFor="login-email">Email address</label><input id="login-email" name="email" type="email" autoComplete="username" required value={email} onChange={e=>setEmail(e.target.value)} /></div>
         <div className="field"><label htmlFor="login-password">Password</label><input id="login-password" name="password" type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)} /></div>
         <button className="btn" disabled={loading}>{loading ? "Signing in..." : "Sign in"}<Icon name="arrow" size={17} /></button>
-        <div className="demo-note"><Icon name="shield" size={16} /><div><strong>Exploring the demo?</strong><br />admin@crm.local / Admin@12345</div></div>
+        <div className="demo-note"><Icon name="shield" size={16} /><div><strong>Your workspace is private.</strong><br />Use the credentials supplied by your administrator.</div></div>
       </form></div>
     </main>
   );
