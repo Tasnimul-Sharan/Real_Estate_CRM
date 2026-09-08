@@ -1,11 +1,9 @@
 node_modules
 .next
 dist
+.git
 .env
-.env.local
-coverage
+.env.*
+!.env.example
 *.log
-.DS_Store
-
 *.tsbuildinfo
-next-env.d.ts

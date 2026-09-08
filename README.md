@@ -42,3 +42,30 @@ npm run dev
 
 See `Real_Estate_CRM_Complete_Guide.docx` for the detailed Bengali/English guide.
 # Real_Estate_CRM
+
+## Dependency maintenance and warning checks
+
+Run npm commands from `apps/api` or `apps/web`; the repository root has no package.json.
+Both apps now include lockfiles. Use `npm ci` to reproduce the checked versions.
+For editor types, run `npx prisma generate` in `apps/api` and `npm run build` in `apps/web` once after installation.
+
+From either app folder:
+
+```bash
+npm audit
+npm run typecheck
+```
+
+From the project root, with Docker Desktop running:
+
+```bash
+docker compose up -d --build
+docker compose logs --tail 100 api web
+```
+
+The Compose project name stays `real_estate_crm_nestjs_complete` so renaming this folder reuses the existing database volume.
+Prisma CLI and seed configuration is in `apps/api/prisma.config.ts`, which explicitly loads `.env`.
+
+Two scoped dependency overrides supply patched transitive packages: `@prisma/config` uses `deepmerge-ts` 8.0.2, and Next.js uses PostCSS 8.5.28. Recheck these overrides when upgrading their parent packages; Prisma generation/validation/startup and Next.js production builds were verified with them.
+
+The `.gitattributes` file standardizes source files on LF line endings. npm funding/update notices and Prisma tips are informational, not application warnings or build failures.
