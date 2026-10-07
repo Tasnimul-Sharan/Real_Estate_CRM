@@ -67,7 +67,7 @@ export default function Bookings() {
     <>
       <Topbar
         title="Bookings"
-        action={permissions.sales && (
+        action={permissions.can('bookings.create') && (
           <button className="btn" onClick={() => setOpen(true)}>
             <Icon name="plus" size={16} /> New Booking
           </button>
@@ -84,10 +84,10 @@ export default function Bookings() {
                 <th>Plot</th>
                 <th>Project</th>
                 <th>Booking Amount</th>
-                <th>Paid</th>
+                {permissions.can('payments.view') && <th>Paid</th>}
                 <th>Sales</th>
                 <th>Status</th>
-                {permissions.sales && <th>Manage</th>}
+                {permissions.can('bookings.edit') && <th>Manage</th>}
               </tr>
             </thead>
             <tbody>
@@ -100,19 +100,19 @@ export default function Bookings() {
                   <td>{x.plot.plotNo}</td>
                   <td>{x.plot.project.name}</td>
                   <td>{money(x.bookingAmount)}</td>
-                  <td>
+                  {permissions.can('payments.view') && <td>
                     {money(
                       x.payments.reduce(
                         (a: number, p: any) => a + Number(p.amount),
                         0,
                       ),
                     )}
-                  </td>
+                  </td>}
                   <td>{x.salesUser.name}</td>
                   <td>
                     <span className={`badge ${x.status}`}>{x.status}</span>
                   </td>
-                  {permissions.sales && <td>{transitions[x.status]?.length > 0 && <button className="btn secondary" onClick={() => {setErr("");setSelected(x);setNextStatus(transitions[x.status][0]);}}>Change status</button>}</td>}
+                  {permissions.can('bookings.edit') && <td>{transitions[x.status]?.length > 0 && <button className="btn secondary" onClick={() => {setErr("");setSelected(x);setNextStatus(transitions[x.status][0]);}}>Change status</button>}</td>}
                 </tr>
               ))}
             </tbody>

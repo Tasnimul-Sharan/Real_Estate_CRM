@@ -1,3 +1,4 @@
+import { PermissionGuard, RequirePermissions } from '../access/permission.guard';
 import { CurrentUser } from "../common/current-user.decorator";
 import { AuthUser } from "../common/auth-user.interface";
 import {
@@ -12,26 +13,24 @@ import {
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { Role } from "@prisma/client";
 import { AuthGuard } from "../common/auth.guard";
-import { RolesGuard } from "../common/roles.guard";
-import { Roles } from "../common/roles.decorator";
 import { UsersService } from "./users.service";
 import { CreateUserDto, UpdateUserDto } from "./dto/user.dto";
 @ApiTags("users")
 @ApiBearerAuth()
-@UseGuards(AuthGuard, RolesGuard)
+@UseGuards(AuthGuard, PermissionGuard)
 @Controller("users")
 export class UsersController {
   constructor(private s: UsersService) {}
-  @Get() list() {
+  @RequirePermissions('users.view') @Get() list() {
     return this.s.list();
   }
-  @Roles(Role.SUPER_ADMIN, Role.ADMIN) @Post() create(
+  @RequirePermissions('users.create') @Post() create(
     @Body() d: CreateUserDto,
     @CurrentUser() u: AuthUser,
   ) {
     return this.s.create(d, u);
   }
-  @Roles(Role.SUPER_ADMIN, Role.ADMIN) @Patch(":id") update(
+  @RequirePermissions('users.edit') @Patch(":id") update(
     @Param("id") id: string,
     @Body() d: UpdateUserDto,
     @CurrentUser() u: AuthUser,

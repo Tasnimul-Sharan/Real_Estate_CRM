@@ -37,3 +37,14 @@ services:
     command: ["node", "--test", "--test-concurrency=1", "test/workflow.test.cjs"]
     depends_on:
       - api
+
+  web:
+    profiles: [ui]
+    build:
+      context: ./apps/web
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:4100/api
+    ports:
+      - "127.0.0.1:3100:3000"
+    depends_on:
+      - api

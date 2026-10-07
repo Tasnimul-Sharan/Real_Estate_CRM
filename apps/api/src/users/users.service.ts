@@ -1,3 +1,4 @@
+import { AccessService } from '../access/access.service';
 import {
   ConflictException,
   ForbiddenException,
@@ -20,7 +21,7 @@ const visible = {
 } as const;
 @Injectable()
 export class UsersService {
-  constructor(private p: PrismaService) {}
+  constructor(private p: PrismaService, private access: AccessService) {}
   list() {
     return this.p.user.findMany({
       select: visible,
@@ -28,6 +29,7 @@ export class UsersService {
     });
   }
   async create(d: CreateUserDto, actor: AuthUser) {
+    await this.access.assertAssignable(d.role, actor);
     if (actor.role !== Role.SUPER_ADMIN && d.role === Role.SUPER_ADMIN)
       throw new ForbiddenException(
         "Only a super admin can create another super admin",
@@ -46,6 +48,8 @@ export class UsersService {
       await tx.$queryRaw`SELECT pg_advisory_xact_lock(824617)::text`;
       const user = await tx.user.findUnique({ where: { id } });
       if (!user) throw new NotFoundException("User not found");
+      await this.access.assertAssignable(user.role, actor);
+      if (d.role) await this.access.assertAssignable(d.role, actor);
       if (
         actor.role !== Role.SUPER_ADMIN &&
         (user.role === Role.SUPER_ADMIN || d.role === Role.SUPER_ADMIN)

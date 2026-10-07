@@ -88,3 +88,13 @@ Run npm commands inside `apps/api` or `apps/web`; there is no root package.json.
 Use `docker compose up -d --build` after source changes. Run `npm audit` in both apps when maintaining dependencies. Scoped dependency overrides patch Prisma's deepmerge-ts and Next's PostCSS; reassess them when upgrading parent packages. Swagger is disabled by default; set `ENABLE_API_DOCS=true` in local configuration to enable `/docs`.
 
 Demo seeding is explicit, requires `SEED_DEMO=true` plus supplied administrator credentials, and is forbidden in production. The older Word guide describes the starter version; this README supersedes its startup, password, database and backup instructions.
+
+## Configurable role access
+
+Sign in as **SUPER_ADMIN**, open **Roles & Access**, select a role, choose its View/Create/Edit and special-action permissions, then click **Save access**. The page automatically includes required read permissions; turning a prerequisite off removes dependent actions. Existing roles retain their previous defaults until saved. An empty policy denies all feature access.
+
+Use **Team & users → Edit user → Role** to assign a role or deactivate an account. API requests check the current account and role permissions on every request, including existing sessions. Open pages refresh permissions every 15 seconds and on navigation/focus; permission changes refresh page data and controls. Denied modules are hidden from navigation, blocked on direct URLs and API routes, and removed from related records and dashboard summaries.
+
+Only Super Admin can configure permissions. Super Admin access is protected, and at least one active Super Admin must remain. Other user managers can only assign/manage roles whose permissions are within their own. Permission edits are versioned to prevent accidental overwrite and recorded with the actor, before/after permissions and timestamp.
+
+Run `scripts/Test-Workflow.ps1` for isolated API workflow and permission tests. For a disposable UI preview, use `docker compose -f docker-compose.test.yml --profile ui up -d --build db api web` (port 3100; test-only admin credentials are in that compose file). Stop with `docker compose -f docker-compose.test.yml --profile ui down`; the test database is temporary and separate from live data.

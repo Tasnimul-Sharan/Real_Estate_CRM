@@ -61,7 +61,7 @@ export default function LeadDetail() {
   }
   return (
     <>
-      <Topbar title={d?.name || "Lead Detail"} action={permissions.sales && d && !d.customerId && <button className="btn" disabled={converting} onClick={convert}>{converting ? "Converting..." : "Convert to customer"}</button>} />
+      <Topbar title={d?.name || "Lead Detail"} action={permissions.can('leads.convert') && d && !d.customerId && <button className="btn" disabled={converting} onClick={convert}>{converting ? "Converting..." : "Convert to customer"}</button>} />
       {err && <div className="error">{err}</div>}
       {!d ? (
         <div className="card">Loading...</div>
@@ -99,7 +99,7 @@ export default function LeadDetail() {
                 className="toolbar"
                 style={{ marginTop: 14, marginBottom: 0 }}
               >
-                <select disabled={!permissions.sales} aria-label="Lead stage" name="lead-stage"
+                <select disabled={!permissions.can('leads.edit')} aria-label="Lead stage" name="lead-stage"
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                 >
@@ -116,12 +116,12 @@ export default function LeadDetail() {
                     <option key={x}>{x}</option>
                   ))}
                 </select>
-                <button className="btn" disabled={!permissions.sales} onClick={stage}>
+                <button className="btn" disabled={!permissions.can('leads.edit')} onClick={stage}>
                   Update Stage
                 </button>
               </div>
             </div>
-            <div className="card">
+            {permissions.can('activities.view') && <div className="card">
               <div className="section-title">
                 <h2>Activity Timeline</h2>
               </div>
@@ -161,14 +161,14 @@ export default function LeadDetail() {
               ) : (
                 <div className="empty">No activities yet</div>
               )}
-            </div>
+            </div>}
           </div>
-          <div className="card">
+          {permissions.can('activities.create') && <div className="card">
             <div className="section-title">
               <h2>Log Activity</h2>
             </div>
             <form onSubmit={activity}>
-              <fieldset disabled={!permissions.sales} style={{border:0,padding:0,margin:0,minWidth:0}}>
+              <fieldset disabled={!permissions.can('activities.create')} style={{border:0,padding:0,margin:0,minWidth:0}}>
               <div className="field">
                 <label htmlFor="-crm-leads-id-type">Type</label>
                 <select id="-crm-leads-id-type" name="-crm-leads-id-type" value={type} onChange={(e) => setType(e.target.value)}>
@@ -207,7 +207,7 @@ export default function LeadDetail() {
               </button>
             </fieldset>
             </form>
-          </div>
+          </div>}
         </div>
       )}
     </>

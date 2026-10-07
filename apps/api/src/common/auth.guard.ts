@@ -1,3 +1,4 @@
+import { AccessService } from '../access/access.service';
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Reflector } from '@nestjs/core';
@@ -6,7 +7,7 @@ import { IS_PUBLIC_KEY } from './public.decorator';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private jwt: JwtService, private reflector: Reflector, private prisma: PrismaService) {}
+  constructor(private jwt: JwtService, private reflector: Reflector, private prisma: PrismaService, private access: AccessService) {}
   async canActivate(context: ExecutionContext) {
     if (this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [context.getHandler(), context.getClass()])) return true;
     const req = context.switchToHttp().getRequest();
@@ -18,7 +19,7 @@ export class AuthGuard implements CanActivate {
     const user = typeof payload.sub === 'string' ? await this.prisma.user.findUnique({ where: { id: payload.sub } }) : null;
     if (!user || user.status !== 'ACTIVE') throw new UnauthorizedException('Account is inactive or unavailable');
     // Apply role changes and account deactivation immediately, including existing sessions.
-    req.user = { sub: user.id, email: user.email, name: user.name, role: user.role };
+    req.user = { sub: user.id, email: user.email, name: user.name, role: user.role, permissions: await this.access.effective(user.role) };
     return true;
   }
 }

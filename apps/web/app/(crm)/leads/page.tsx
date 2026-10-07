@@ -19,6 +19,7 @@ const init = {
 };
 export default function Leads() {
   const permissions = usePermissions();
+  const canViewProjects = permissions.can('projects.view'), canViewUsers = permissions.can('users.view');
   const [list, setList] = useState<any[]>([]),
     [projects, setProjects] = useState<any[]>([]),
     [users, setUsers] = useState<any[]>([]),
@@ -32,9 +33,9 @@ export default function Leads() {
       .catch((e) => setError(e.message)), []);
   useEffect(() => {
     load();
-    api<any[]>("/projects").then(setProjects).catch((e) => setError(e.message));
-    api<any[]>("/users").then(setUsers).catch((e) => setError(e.message));
-  }, [load]);
+    if (canViewProjects) api<any[]>("/projects").then(setProjects).catch((e) => setError(e.message));
+    if (canViewUsers) api<any[]>("/users").then(setUsers).catch((e) => setError(e.message));
+  }, [load, canViewProjects, canViewUsers]);
   async function submit(e: FormEvent) {
     e.preventDefault();
     setError("");
@@ -60,7 +61,7 @@ export default function Leads() {
     <>
       <Topbar
         title="Leads"
-        action={permissions.sales && (
+        action={permissions.can('leads.create') && (
           <button className="btn" onClick={() => setOpen(true)}>
             <Icon name="plus" size={16} /> New Lead
           </button>

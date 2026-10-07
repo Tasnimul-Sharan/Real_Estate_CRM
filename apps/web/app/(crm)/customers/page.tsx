@@ -53,7 +53,7 @@ export default function Customers() {
     <>
       <Topbar
         title="Customers"
-        action={permissions.sales && (
+        action={permissions.can('customers.create') && (
           <button className="btn" onClick={() => setOpen(true)}>
             <Icon name="plus" size={16} /> New Customer
           </button>

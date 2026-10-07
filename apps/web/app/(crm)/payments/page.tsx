@@ -25,7 +25,7 @@ export default function Payments() {
   useEffect(() => {
     load();
     api<any[]>("/bookings").then((x) => {
-      const active = x.filter((b: any) => b.status !== "CANCELLED");
+      const active = x.filter((b: any) => ["CONFIRMED", "COMPLETED"].includes(b.status));
       setBookings(active);
       setF((v: any) => ({ ...v, bookingId: active[0]?.id || "" }));
     }).catch((e) => setErr(e.message));
@@ -52,7 +52,7 @@ export default function Payments() {
     <>
       <Topbar
         title="Payments"
-        action={permissions.payments && (
+        action={permissions.can('payments.create') && (
           <button className="btn" onClick={() => setOpen(true)}>
             <Icon name="plus" size={16} /> Record Payment
           </button>

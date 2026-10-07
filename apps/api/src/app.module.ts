@@ -1,3 +1,6 @@
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { AccessModule } from './access/access.module';
+import { VisibilityInterceptor } from './access/visibility.interceptor';
 import { validateEnvironment } from "./config/environment";
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
@@ -15,6 +18,7 @@ import { PaymentsModule } from "./payments/payments.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
 
 @Module({
+  providers: [{ provide: APP_INTERCEPTOR, useClass: VisibilityInterceptor }],
   imports: [
     ConfigModule.forRoot({ isGlobal: true, validate: validateEnvironment }),
     JwtModule.registerAsync({
@@ -28,6 +32,7 @@ import { DashboardModule } from "./dashboard/dashboard.module";
       }),
     }),
     PrismaModule,
+    AccessModule,
     AuthModule,
     UsersModule,
     ProjectsModule,

@@ -169,3 +169,79 @@ test('configuration fails closed for weak secrets and wildcard origins', () => {
   assert.throws(() => validateEnvironment({ ...env, JWT_SECRET: 'change-this-in-production' }));
   assert.throws(() => validateEnvironment({ ...env, CORS_ORIGIN: '*' }));
 });
+
+test('configurable role access: grants, revocation, dependencies, persistence and audit', async t => {
+  const catalog = await ok('GET', '/access/roles', 'SUPER_ADMIN');
+  const initial = catalog.roles.find(x => x.role === 'VIEWER');
+  let version = initial.version;
+  const save = async permissions => {
+    const result = await ok('PUT', '/access/roles/VIEWER', 'SUPER_ADMIN', { permissions, version });
+    version = result.version;
+    return result;
+  };
+  try {
+    await t.test('only super admin can read or update access configuration', async () => {
+      for (const role of ['ADMIN','SALES_MANAGER','ACCOUNTS','VIEWER']) {
+        await ok('GET','/access/roles',role,undefined,403);
+        await ok('GET','/access/history',role,undefined,403);
+        await ok('PUT','/access/roles/VIEWER',role,{permissions:[],version},403);
+      }
+      await ok('PUT','/access/roles/SUPER_ADMIN','SUPER_ADMIN',{permissions:[],version:0},403);
+    });
+    await t.test('unknown permissions and missing dependencies are rejected', async () => {
+      for (const permissions of [['access.manage'],['unknown.view'],['leads.create'],['bookings.view'],['leads.view','leads.convert']]) {
+        await ok('PUT','/access/roles/VIEWER','SUPER_ADMIN',{permissions,version},400);
+      }
+    });
+    await t.test('existing token gets newly granted create permission', async () => {
+      await save(['leads.view','leads.create']);
+      await ok('POST','/leads','VIEWER',{name:'Configurable viewer lead',phone:unique()});
+      assert.deepEqual((await ok('GET','/auth/me','VIEWER')).permissions,['leads.create','leads.view']);
+      assert.deepEqual((await prisma.rolePolicy.findUnique({where:{role:'VIEWER'}})).permissions,['leads.create','leads.view']);
+    });
+    await t.test('revocation affects existing token and all direct routes', async () => {
+      await save(['leads.view']);
+      await ok('POST','/leads','VIEWER',{name:'Denied',phone:unique()},403);
+      for(const route of ['/users','/projects','/plots','/customers','/bookings','/payments','/dashboard/summary','/activities?leadId='+lead.id]) await ok('GET',route,'VIEWER',undefined,403);
+      const detail=await ok('GET','/leads/'+lead.id,'VIEWER');
+      assert.deepEqual(detail.activities,[]);
+    });
+    await t.test('nested records and aggregate values respect denied module access', async () => {
+      await save(['customers.view','projects.view','plots.view','bookings.view','dashboard.view']);
+      const b=await ok('GET','/bookings/'+sharedBooking.id,'VIEWER');
+      assert.deepEqual(b.payments,[]);
+      const c=await ok('GET','/customers/'+customer.id,'VIEWER');
+      assert.deepEqual(c.leads,[]);
+      assert.ok(c.bookings.every(b=>b.payments.length===0));
+      const summary=await ok('GET','/dashboard/summary','VIEWER');
+      for(const field of ['totalPayments','leadCount','newLeads','recentLeads','followUps']) assert.equal(field in summary,false,field);
+      assert.equal(typeof summary.totalBookedAmount,'number');
+      await save(['customers.view','projects.view','plots.view']);
+      assert.deepEqual((await ok('GET','/plots/'+sharedBooking.plotId,'VIEWER')).bookings,[]);
+      assert.deepEqual((await ok('GET','/customers/'+customer.id,'VIEWER')).bookings,[]);
+    });
+    await t.test('limited user managers cannot grant stronger roles or manage stronger accounts', async () => {
+      await save(['users.view','users.create','users.edit']);
+      assert.deepEqual(await ok('GET','/access/assignable-roles','VIEWER'),['VIEWER']);
+      await ok('POST','/users','VIEWER',{name:'Denied manager',email:unique()+'@crm.test',password:'ExamplePassword123!',role:'ADMIN'},403);
+      await ok('PATCH','/users/'+users.ADMIN.id,'VIEWER',{status:'INACTIVE'},403);
+      await ok('PATCH','/users/'+users.VIEWER.id,'VIEWER',{role:'ADMIN'},403);
+    });
+    await t.test('stale saves cannot overwrite a policy', async () => {
+      await ok('PUT','/access/roles/VIEWER','SUPER_ADMIN',{permissions:[],version:version-1},409);
+    });
+    await t.test('empty permissions persist and deny all feature access', async () => {
+      await save([]);
+      assert.deepEqual((await ok('GET','/auth/me','VIEWER')).permissions,[]);
+      await ok('GET','/leads','VIEWER',undefined,403);
+      assert.deepEqual((await prisma.rolePolicy.findUnique({where:{role:'VIEWER'}})).permissions,[]);
+    });
+    await t.test('audit records the actor and before/after change', async () => {
+      const history=await ok('GET','/access/history','SUPER_ADMIN');
+      assert.equal(history[0].actorId,users.SUPER_ADMIN.id);
+      assert.equal(history[0].role,'VIEWER');
+      assert.deepEqual(history[0].after,[]);
+      assert.ok(history[0].before.includes('users.edit'));
+    });
+  } finally { await save(initial.permissions); }
+});

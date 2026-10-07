@@ -1,8 +1,9 @@
 import "./globals.css";
+import "./brand.css";
 import type { Metadata } from "next";
 export const metadata: Metadata = {
-  title: "Real Estate CRM",
-  description: "Sales and inventory CRM",
+  title: "Anondo Housing Society | CRM",
+  description: "Anondo Housing Society — customer relationships, property inventory and sales.",
 };
 export default function RootLayout({
   children,

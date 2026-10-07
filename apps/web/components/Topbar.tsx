@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Icon from "./Icon";
 const descriptions: Record<string, string> = {
+  "Roles & Access": "Decide which features each role can view and manage.",
   Dashboard: "A clear picture of your sales, properties and priorities.",
   Leads: "Turn every conversation into a new opportunity.",
   Customers: "Build lasting relationships with your customers.",

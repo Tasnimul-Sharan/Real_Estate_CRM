@@ -232,3 +232,20 @@ model Payment {
   createdAt   DateTime      @default(now())
   @@index([bookingId])
 }
+
+model RolePolicy {
+  role Role @id
+  permissions String[]
+  version Int @default(1)
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
+model AccessAudit {
+  id String @id @default(cuid())
+  role Role
+  actorId String
+  before String[]
+  after String[]
+  createdAt DateTime @default(now())
+  @@index([createdAt])
+}

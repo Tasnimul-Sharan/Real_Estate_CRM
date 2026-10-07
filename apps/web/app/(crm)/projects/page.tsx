@@ -48,7 +48,7 @@ export default function Projects() {
     <>
       <Topbar
         title="Projects"
-        action={permissions.inventory && (
+        action={permissions.can('projects.create') && (
           <button className="btn" onClick={() => setOpen(true)}>
             <Icon name="plus" size={16} /> New Project
           </button>

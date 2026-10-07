@@ -59,7 +59,7 @@ export default function Plots() {
     <>
       <Topbar
         title="Plot Inventory"
-        action={permissions.inventory && (
+        action={permissions.can('plots.create') && (
           <button className="btn" onClick={() => setOpen(true)}>
             <Icon name="plus" size={16} /> New Plot
           </button>
