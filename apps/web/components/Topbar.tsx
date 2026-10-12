@@ -1,8 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
+import Reminders from './OperationsUI';
 import Icon from "./Icon";
 const descriptions: Record<string, string> = {
   "Roles & Access": "Decide which features each role can view and manage.",
+  'Installments & Dues': 'Plan your collections and see every outstanding installment.',
+  'Statements & Receipts': 'Clear customer balances and print-ready payment records.',
+  'Follow-up Calendar': 'Calls, meetings and site visits, organized by date.',
+  'Sales & Collection Reports': 'Track bookings, cash collections and team performance.',
   Dashboard: "A clear picture of your sales, properties and priorities.",
   Leads: "Turn every conversation into a new opportunity.",
   Customers: "Build lasting relationships with your customers.",
@@ -25,6 +30,7 @@ export default function Topbar({ title, action }: { title: string; action?: Reac
       <div className="breadcrumb"><Icon name="home" size={16} /><span>Workspace</span><Icon name="chevron" size={12} /><strong>{title}</strong></div>
       <div className="workspace-bar-right"><span className="date-label"><Icon name="calendar" size={16} />{date}</span><div className="user-profile"><span className="avatar">{initials}</span><div><strong>{user?.name || "User"}</strong><span>{(user?.role || "Workspace member").replaceAll("_", " ").toLowerCase()}</span></div></div></div>
     </header>
+    <Reminders />
     <div className="topbar"><div><div className="eyebrow">YOUR WORKSPACE</div><h1>{title}</h1><p>{descriptions[title] || "Every detail you need to move this relationship forward."}</p></div><div className="topbar-actions">{action}</div></div>
   </>;
 }

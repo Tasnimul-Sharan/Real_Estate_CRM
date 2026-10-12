@@ -213,6 +213,7 @@ model Booking {
   plot          Plot          @relation(fields: [plotId], references: [id])
   customer      Customer      @relation(fields: [customerId], references: [id])
   salesUser     User          @relation("SalesUser", fields: [salesUserId], references: [id])
+  paymentPlan   PaymentPlan?
   payments      Payment[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
@@ -248,4 +249,25 @@ model AccessAudit {
   after String[]
   createdAt DateTime @default(now())
   @@index([createdAt])
+}
+
+model PaymentPlan {
+  id String @id @default(cuid())
+  bookingId String @unique
+  totalPrice Decimal @db.Decimal(16, 2)
+  createdById String
+  createdAt DateTime @default(now())
+  booking Booking @relation(fields: [bookingId], references: [id])
+  installments Installment[]
+}
+model Installment {
+  id String @id @default(cuid())
+  planId String
+  sequence Int
+  label String
+  dueDate DateTime @db.Date
+  amount Decimal @db.Decimal(16, 2)
+  plan PaymentPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  @@unique([planId, sequence])
+  @@index([dueDate])
 }

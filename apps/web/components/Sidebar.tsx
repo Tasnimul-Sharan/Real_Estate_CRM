@@ -8,6 +8,7 @@ import Icon, { type IconName } from "./Icon";
 const groups: { label: string; items: [string, string, IconName][] }[] = [
   { label: "WORKSPACE", items: [["Dashboard", "/dashboard", "dashboard"], ["Leads", "/leads", "leads"], ["Customers", "/customers", "users"]] },
   { label: "PROPERTY & SALES", items: [["Projects", "/projects", "building"], ["Plot inventory", "/plots", "plots"], ["Bookings", "/bookings", "calendar"], ["Payments", "/payments", "wallet"]] },
+  { label: "COLLECTIONS & PLANNING", items: [["Installments & dues", "/installments", "wallet"], ["Statements & receipts", "/statements", "briefcase"], ["Follow-up calendar", "/calendar", "calendar"], ["Reports", "/reports", "dashboard"]] },
   { label: "ORGANIZATION", items: [["Team & users", "/users", "briefcase"], ["Roles & Access", "/access", "shield"]] },
 ];
 export default function Sidebar() {

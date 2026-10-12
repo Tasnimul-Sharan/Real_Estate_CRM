@@ -36,5 +36,5 @@ export const money = (n: any) =>
   new Intl.NumberFormat("en-BD", {
     style: "currency",
     currency: "BDT",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2, maximumFractionDigits: 2,
   }).format(Number(n || 0));

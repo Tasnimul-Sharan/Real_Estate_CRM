@@ -1,3 +1,4 @@
+import { OperationsModule } from './operations/operations.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AccessModule } from './access/access.module';
 import { VisibilityInterceptor } from './access/visibility.interceptor';
@@ -33,6 +34,7 @@ import { DashboardModule } from "./dashboard/dashboard.module";
     }),
     PrismaModule,
     AccessModule,
+    OperationsModule,
     AuthModule,
     UsersModule,
     ProjectsModule,

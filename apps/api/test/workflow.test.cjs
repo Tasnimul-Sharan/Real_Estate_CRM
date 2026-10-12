@@ -245,3 +245,94 @@ test('configurable role access: grants, revocation, dependencies, persistence an
     });
   } finally { await save(initial.permissions); }
 });
+
+test('installments, statements, calendar and reports end-to-end', async t=>{
+ const c=await ok('POST','/customers','ADMIN',{name:'Operations Customer আনন্দ',phone:unique()});
+ const project2=await ok('POST','/projects','ADMIN',{name:'Operations test project',code:unique(),location:'Dhaka'});
+ async function newBooking(){const p=await ok('POST','/plots','ADMIN',{projectId:project2.id,plotNo:unique(),sizeKatha:1,pricePerKatha:100});return ok('POST','/bookings','ADMIN',{plotId:p.id,customerId:c.id,bookingAmount:10})}
+ const plan=(b,extra={})=>({bookingId:b.id,totalPrice:100,downPayment:20,months:2,downPaymentDate:'2024-01-01',firstInstallmentDate:'2024-02-01',...extra});
+ const paidBooking=await newBooking();let receipt;
+ await t.test('new features enforce role permissions and authentication',async()=>{
+  for(const route of ['/installments','/statements/customers/'+c.id,'/calendar','/reports?from=2026-01-01&to=2026-01-31']){
+   await ok('GET',route,null,undefined,401);await ok('GET',route,'VIEWER',undefined,403);await ok('GET',route,'ADMIN');
+  }
+  await ok('POST','/installments','VIEWER',plan(paidBooking),403);
+  assert.deepEqual(await ok('GET','/operations/reminders','VIEWER'),{});
+ });
+ await t.test('month-end dates and exact rounding preserve the agreed price',async()=>{
+  const b=await newBooking();const result=await ok('POST','/installments','ACCOUNTS',plan(b,{downPayment:0,months:3,firstInstallmentDate:'2028-01-31'}));
+  assert.deepEqual(result.installments.map(i=>i.dueDate.slice(0,10)),['2028-01-31','2028-02-29','2028-03-31']);
+  assert.deepEqual(result.installments.map(i=>Number(i.amount)),[33.33,33.33,33.34]);
+ });
+ await t.test('existing payments and partial payments allocate once to earliest dues',async()=>{
+  receipt=await ok('POST','/payments','ACCOUNTS',{bookingId:paidBooking.id,amount:10,method:'CASH'});
+  await ok('POST','/installments','ACCOUNTS',plan(paidBooking));
+  let b=(await ok('GET','/installments','ACCOUNTS')).find(b=>b.id===paidBooking.id);
+  assert.equal(b.ledger.overdue,'90.00');assert.equal(b.ledger.installments[0].paid,'10.00');
+  await ok('POST','/payments','ACCOUNTS',{bookingId:paidBooking.id,amount:25,method:'BANK_TRANSFER',referenceNo:'Test transfer'});
+  b=(await ok('GET','/installments','ACCOUNTS')).find(b=>b.id===paidBooking.id);
+  assert.equal(b.ledger.paid,'35.00');assert.equal(b.ledger.outstanding,'65.00');assert.equal(b.ledger.overdue,'65.00');
+  assert.deepEqual(b.ledger.installments.map(i=>i.paid),['20.00','15.00','0.00']);
+ });
+ await t.test('duplicate plans, invalid dates and invalid amounts are rejected',async()=>{
+  await ok('POST','/installments','ADMIN',plan(paidBooking),409);
+  for(const extra of [{totalPrice:-1},{downPayment:101},{months:0},{firstInstallmentDate:'2026-02-30'},{downPaymentDate:'2026-06-01',firstInstallmentDate:'2026-05-01'},{totalPrice:0.02,downPayment:0,months:3}]){
+   await ok('POST','/installments','ADMIN',plan(await newBooking(),extra),400);
+  }
+  const b=await newBooking();await ok('POST','/payments','ACCOUNTS',{bookingId:b.id,amount:101,method:'CASH'});await ok('POST','/installments','ADMIN',plan(b),409);
+ });
+ await t.test('concurrent payment requests cannot exceed the plan price',async()=>{
+  const b=await newBooking();await ok('POST','/installments','ADMIN',plan(b));
+  const results=await Promise.all([request('POST','/payments','ACCOUNTS',{bookingId:b.id,amount:80,method:'CASH'}),request('POST','/payments','ADMIN',{bookingId:b.id,amount:80,method:'CASH'})]);
+  assert.deepEqual(results.map(r=>r.status).sort(),[201,409]);
+  await ok('POST','/payments','ACCOUNTS',{bookingId:b.id,amount:20,method:'CASH'});
+  await ok('POST','/payments','ACCOUNTS',{bookingId:b.id,amount:0.01,method:'CASH'},409);
+ });
+ await t.test('concurrent plan creation yields one schedule',async()=>{
+  const b=await newBooking(),body=plan(b);const results=await Promise.all([request('POST','/installments','ADMIN',body),request('POST','/installments','ACCOUNTS',body)]);
+  assert.deepEqual(results.map(r=>r.status).sort(),[201,409]);
+  assert.equal(await prisma.paymentPlan.count({where:{bookingId:b.id}}),1);
+ });
+ await t.test('cancelled bookings stop contributing dues; full down payment needs no installments',async()=>{
+  const b=await newBooking();await ok('POST','/installments','ADMIN',plan(b,{downPayment:100,months:0}));
+  await ok('PATCH','/bookings/'+b.id,'ADMIN',{status:'CANCELLED'});
+  const saved=(await ok('GET','/installments','ADMIN')).find(x=>x.id===b.id);
+  assert.equal(saved.ledger.outstanding,'0.00');assert.equal(saved.ledger.overdue,'0.00');assert.equal(saved.ledger.installments.length,1);
+  await ok('POST','/installments','ADMIN',plan(b),409);
+ });
+ await t.test('customer statement and stable receipt agree with recorded payments',async()=>{
+  const statement=await ok('GET','/statements/customers/'+c.id,'ACCOUNTS');
+  const b=statement.bookings.find(b=>b.id===paidBooking.id);
+  assert.equal(b.ledger.paid,'35.00');assert.ok(statement.unplanned>0);
+  const r=await ok('GET','/statements/receipts/'+receipt.id,'ACCOUNTS');
+  assert.equal(r.receiptNo,'AHS-'+receipt.id.toUpperCase());assert.equal(Number(r.amount),10);assert.equal(r.booking.customer.id,c.id);
+  await ok('GET','/statements/receipts/missing','ADMIN',undefined,404);
+ });
+ await t.test('calendar schedules, detects stale changes, completes and removes reminders',async()=>{
+  let l=await ok('POST','/leads','ADMIN',{name:'Calendar test lead',phone:unique(),assignedToId:users.ADMIN.id});
+  const future=new Date(Date.now()+86400000).toISOString();
+  const body={leadId:l.id,scheduledAt:future,type:'SITE_VISIT',note:'Visit site',expectedUpdatedAt:l.updatedAt,assignedToId:users.ADMIN.id};
+  l=await ok('POST','/calendar','ADMIN',body);
+  await ok('POST','/calendar','ADMIN',body,409);
+  let data=await ok('GET','/calendar?month='+new Date(new Date(future).getTime()+21600000).toISOString().slice(0,7),'ADMIN');assert.ok(data.events.some(e=>e.id===l.id));
+  await prisma.lead.update({where:{id:l.id},data:{nextFollowUpAt:new Date(Date.now()-86400000)}});
+  data=await ok('GET','/calendar','ADMIN');l=data.overdue.find(e=>e.id===l.id);assert.ok(l);
+  assert.ok((await ok('GET','/operations/reminders','ADMIN')).followUps.overdue>0);
+  await ok('PATCH','/calendar/'+l.id+'/complete','ADMIN',{expectedUpdatedAt:l.updatedAt,note:'Site visit complete'});
+  await ok('PATCH','/calendar/'+l.id+'/complete','ADMIN',{expectedUpdatedAt:l.updatedAt,note:'Duplicate'},409);
+  assert.equal((await ok('GET','/leads/'+l.id,'ADMIN')).nextFollowUpAt,null);
+  assert.ok(!(await ok('GET','/calendar','ADMIN')).overdue.some(e=>e.id===l.id));
+  await ok('GET','/calendar?month=invalid','ADMIN',undefined,400);
+ });
+ await t.test('reports use Dhaka date boundaries, project filters and correct collection totals',async()=>{
+  const rp=await ok('POST','/projects','ADMIN',{name:'Report boundary fixture',code:unique(),location:'Dhaka'});
+  const p=await ok('POST','/plots','ADMIN',{projectId:rp.id,plotNo:unique(),sizeKatha:1,pricePerKatha:100});
+  const b=await ok('POST','/bookings','ADMIN',{plotId:p.id,customerId:c.id,bookingAmount:15});
+  await prisma.booking.update({where:{id:b.id},data:{bookedAt:new Date('2026-03-01T00:00:00+06:00')}});
+  for(const [date,amount] of [['2026-03-01T00:00:00+06:00',10],['2026-03-31T23:59:59+06:00',20],['2026-04-01T00:00:00+06:00',30],['2026-02-28T23:59:59+06:00',40]]) await ok('POST','/payments','ACCOUNTS',{bookingId:b.id,amount,method:'CASH',paymentDate:date});
+  const r=await ok('GET',`/reports?from=2026-03-01&to=2026-03-31&projectId=${rp.id}`,'ACCOUNTS');
+  assert.equal(r.totals.bookings,1);assert.equal(r.totals.bookingAmount,'15.00');assert.equal(r.totals.collections,'30.00');assert.equal(r.collections.length,2);assert.equal(r.months[0].month,'2026-03');assert.equal(r.salespeople[0].collections,'30.00');assert.equal(r.totals.unplanned,1);
+  await ok('GET','/reports?from=2026-02-30&to=2026-03-31','ADMIN',undefined,400);
+  await ok('GET','/reports?from=2026-04-01&to=2026-03-31','ADMIN',undefined,400);
+ });
+});

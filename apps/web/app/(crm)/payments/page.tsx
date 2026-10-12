@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import Link from 'next/link';
 import Icon from "@/components/Icon";
 import { usePermissions } from "@/lib/permissions";
 import Topbar from "@/components/Topbar";
@@ -7,6 +8,7 @@ import Modal from "@/components/Modal";
 import { api, money } from "@/lib/api";
 export default function Payments() {
   const permissions = usePermissions();
+  const [saving, setSaving] = useState(false);
   const [list, setList] = useState<any[]>([]),
     [bookings, setBookings] = useState<any[]>([]),
     [open, setOpen] = useState(false),
@@ -32,6 +34,8 @@ export default function Payments() {
   }, [load]);
   async function save(e: FormEvent) {
     e.preventDefault();
+    if (saving) return;
+    setSaving(true); setErr("");
     try {
       await api("/payments", {
         method: "POST",
@@ -46,7 +50,7 @@ export default function Payments() {
       load();
     } catch (e: any) {
       setErr(e.message);
-    }
+    } finally { setSaving(false); }
   }
   return (
     <>
@@ -69,7 +73,7 @@ export default function Payments() {
                 <th>Project / Plot</th>
                 <th>Amount</th>
                 <th>Method</th>
-                <th>Reference</th>
+                <th>Reference</th>{permissions.can('statements.view') && <th>Receipt</th>}
               </tr>
             </thead>
             <tbody>
@@ -84,7 +88,7 @@ export default function Payments() {
                   </td>
                   <td>{money(x.amount)}</td>
                   <td>{x.method}</td>
-                  <td>{x.referenceNo || "—"}</td>
+                  <td>{x.referenceNo || "—"}</td>{permissions.can('statements.view') && <td><Link className="btn secondary" href={`/statements?receipt=${x.id}`}>View receipt</Link></td>}
                 </tr>
               ))}
             </tbody>
@@ -151,8 +155,8 @@ export default function Payments() {
                 onChange={(e) => setF({ ...f, note: e.target.value })}
               />
             </div>
-            <button className="btn full" disabled={!bookings.length}>
-              Save Payment
+            <button className="btn full" disabled={saving || !bookings.length}>
+              {saving ? "Saving…" : "Save Payment"}
             </button>
           </form>
         </Modal>

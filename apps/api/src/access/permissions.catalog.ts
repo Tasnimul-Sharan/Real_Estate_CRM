@@ -1,5 +1,9 @@
 import { Role } from '@prisma/client';
 export const FEATURES = [
+  { key: 'installments', label: 'Installments & dues', actions: ['view', 'create'] },
+  { key: 'statements', label: 'Statements & receipts', actions: ['view'] },
+  { key: 'calendar', label: 'Follow-up calendar', actions: ['view', 'create', 'edit'] },
+  { key: 'reports', label: 'Sales & collection reports', actions: ['view'] },
   { key: 'dashboard', label: 'Dashboard', actions: ['view'] },
   { key: 'leads', label: 'Leads', actions: ['view', 'create', 'edit', 'convert'] },
   { key: 'activities', label: 'Activities & follow-ups', actions: ['view', 'create'] },
@@ -13,6 +17,10 @@ export const FEATURES = [
 export const PERMISSION_KEYS = FEATURES.flatMap(f => f.actions.map(a => `${f.key}.${a}`));
 export const DEPENDENCIES: Record<string, string[]> = {
   ...Object.fromEntries(FEATURES.flatMap(f => f.actions.filter(a => a !== 'view').map(a => [`${f.key}.${a}`, [`${f.key}.view`]]))),
+  'installments.view': ['payments.view'],
+  'statements.view': ['installments.view'],
+  'calendar.view': ['activities.view'],
+  'reports.view': ['installments.view', 'leads.view'],
   'activities.view': ['leads.view'],
   'plots.view': ['projects.view'],
   'bookings.view': ['plots.view', 'customers.view'],
@@ -21,7 +29,9 @@ export const DEPENDENCIES: Record<string, string[]> = {
 };
 export function defaults(role: Role): string[] {
   if (role === Role.SUPER_ADMIN) return [...PERMISSION_KEYS, 'access.manage'];
-  const permissions = PERMISSION_KEYS.filter(p => p.endsWith('.view'));
+  const permissions = PERMISSION_KEYS.filter(p => p.endsWith('.view') && !['installments','statements','reports','calendar'].includes(p.split('.')[0]));
+  if ([Role.ADMIN, Role.SALES_MANAGER, Role.ACCOUNTS].includes(role as any)) permissions.push('installments.view','installments.create','statements.view','reports.view');
+  if ([Role.ADMIN, Role.SALES_MANAGER, Role.SALES_EXECUTIVE].includes(role as any)) permissions.push('calendar.view','calendar.create','calendar.edit');
   const grant = (...features: string[]) => permissions.push(...PERMISSION_KEYS.filter(p => features.includes(p.split('.')[0]) && !p.endsWith('.view')));
   if ([Role.ADMIN, Role.SALES_MANAGER, Role.SALES_EXECUTIVE].includes(role as any)) grant('leads', 'activities', 'customers', 'bookings');
   if ([Role.ADMIN, Role.SALES_MANAGER].includes(role as any)) grant('projects', 'plots');

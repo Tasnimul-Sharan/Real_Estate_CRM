@@ -6,6 +6,7 @@ export class ActivitiesService {
   constructor(private p: PrismaService) {}
   async create(userId: string, d: CreateActivityDto) {
     return this.p.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "Lead" WHERE id = ${d.leadId} FOR UPDATE`;
       const activity = await tx.activity.create({
         data: {
           leadId: d.leadId,

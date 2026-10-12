@@ -1,3 +1,4 @@
+import './operations.css';
 import "./globals.css";
 import "./brand.css";
 import type { Metadata } from "next";

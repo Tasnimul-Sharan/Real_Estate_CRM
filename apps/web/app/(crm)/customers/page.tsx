@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import Link from 'next/link';
 import Icon from "@/components/Icon";
 import { usePermissions } from "@/lib/permissions";
 import Topbar from "@/components/Topbar";
@@ -83,7 +84,7 @@ export default function Customers() {
                 <th>Email</th>
                 <th>Occupation</th>
                 <th>NRB Country</th>
-                <th>Bookings</th>
+                <th>Bookings</th>{permissions.can('statements.view') && <th>Statement</th>}
               </tr>
             </thead>
             <tbody>
@@ -96,7 +97,7 @@ export default function Customers() {
                   <td>{x.email || "—"}</td>
                   <td>{x.occupation || "—"}</td>
                   <td>{x.nrbCountry || "—"}</td>
-                  <td>{x._count?.bookings || 0}</td>
+                  <td>{x._count?.bookings || 0}</td>{permissions.can('statements.view') && <td><Link className="btn secondary" href={`/statements?customer=${x.id}`}>View statement</Link></td>}
                 </tr>
               ))}
             </tbody>
