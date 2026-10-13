@@ -1,0 +1,1 @@
+SUCCESS: CRM TCP 3000 and 4000 allowed only from 192.168.10.0/23 to 192.168.10.28.

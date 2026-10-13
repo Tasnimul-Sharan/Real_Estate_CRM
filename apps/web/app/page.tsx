@@ -8,6 +8,7 @@ export default function Login() {
   const r = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   useEffect(() => {
@@ -42,7 +43,7 @@ export default function Login() {
         <span className="login-greeting"><Icon name="home" size={24} /></span><h2>Welcome back.</h2><p>Sign in to your Anondo Housing workspace.</p>
         {error && <div className="error" role="alert">{error}</div>}
         <div className="field"><label htmlFor="login-email">Email address</label><input id="login-email" name="email" type="email" autoComplete="username" required value={email} onChange={e=>setEmail(e.target.value)} /></div>
-        <div className="field"><label htmlFor="login-password">Password</label><input id="login-password" name="password" type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)} /></div>
+        <div className="field"><label htmlFor="login-password">Password</label><div className="password-input"><input id="login-password" name="password" type={showPassword ? "text" : "password"} autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)} /><button type="button" className="password-toggle" onClick={()=>setShowPassword(value=>!value)} aria-label={showPassword ? "Hide password" : "Show password"} aria-controls="login-password" title={showPassword ? "Hide password" : "Show password"}><Icon name={showPassword ? "eyeOff" : "eye"} size={20}/></button></div></div>
         <button className="btn" disabled={loading}>{loading ? "Signing in..." : "Sign in"}<Icon name="arrow" size={17} /></button>
         <div className="demo-note"><Icon name="shield" size={16} /><div><strong>Your workspace is private.</strong><br />Use the credentials supplied by your administrator.</div></div>
       </form></div>

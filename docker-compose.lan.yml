@@ -1,0 +1,15 @@
+# Office LAN access; leaves localhost ports available to other applications.
+# Start: docker compose -f docker-compose.yml -f docker-compose.lan.yml up -d --build api web
+services:
+  api:
+    environment:
+      CORS_ORIGIN: http://localhost:3000,http://127.0.0.1:3000,http://192.168.10.28:3000
+    ports: !override
+      - "192.168.10.28:4000:4000"
+  web:
+    build:
+      args:
+        NEXT_PUBLIC_API_URL: http://192.168.10.28:4000/api
+    ports: !override
+      - "192.168.10.28:3000:3000"
+

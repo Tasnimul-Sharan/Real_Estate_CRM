@@ -150,3 +150,11 @@
 @layer brand-responsive {
   @media(max-width:620px) { .access-controls,.access-save { align-items:stretch; flex-direction:column; }.access-summary { text-align:left; }.access-controls .field { min-width:0; }.access-save>div { flex-wrap:wrap; }.access-intro { align-items:flex-start; } }
 }
+
+@layer branding {
+  .password-input { position:relative; }
+  .login-card .password-input input { width:100%; min-width:0; padding-right:50px; }
+  .password-toggle { position:absolute; right:4px; top:50%; transform:translateY(-50%); display:grid; place-items:center; width:40px; height:40px; padding:0; border:0; border-radius:6px; background:transparent; color:var(--secondary); cursor:pointer; }
+  .password-toggle:hover { background:#0072bc0d; }
+  .password-toggle:focus-visible { outline:2px solid var(--secondary); outline-offset:1px; }
+}
