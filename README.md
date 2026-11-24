@@ -11,7 +11,7 @@ docker compose up -d
 docker compose ps
 ```
 
-Open http://localhost:3000. Administrator credentials are saved locally in `.secrets/administrator-login.txt`. There is no default password. Keep `.env`, `.secrets` and database backups private; they are excluded from Git. Ports are bound to localhost. Domain, HTTPS and internet-facing deployment are separate work.
+Open http://localhost:3000. Administrator credentials are saved locally in `.secrets/administrator-login.txt`. There is no default password. Keep `.env`, `.secrets` and database backups private; they are excluded from Git. The base configuration binds ports to localhost. On this office PC, docker-compose.override.yml is loaded automatically and also enables the existing office LAN URL http://192.168.10.28:3000 with matching frontend/API settings. Database access remains localhost-only. Domain, HTTPS and internet-facing deployment are separate work.
 
 ## First installation with an empty database
 

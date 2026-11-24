@@ -1,5 +1,6 @@
 import { Role } from '@prisma/client';
 export const FEATURES = [
+  { key: 'legacy', label: 'Legacy sales & targets', actions: ['view'] },
   { key: 'installments', label: 'Installments & dues', actions: ['view', 'create'] },
   { key: 'statements', label: 'Statements & receipts', actions: ['view'] },
   { key: 'calendar', label: 'Follow-up calendar', actions: ['view', 'create', 'edit'] },
@@ -29,7 +30,7 @@ export const DEPENDENCIES: Record<string, string[]> = {
 };
 export function defaults(role: Role): string[] {
   if (role === Role.SUPER_ADMIN) return [...PERMISSION_KEYS, 'access.manage'];
-  const permissions = PERMISSION_KEYS.filter(p => p.endsWith('.view') && !['installments','statements','reports','calendar'].includes(p.split('.')[0]));
+  const permissions = PERMISSION_KEYS.filter(p => p.endsWith('.view') && !['legacy','installments','statements','reports','calendar'].includes(p.split('.')[0]));
   if ([Role.ADMIN, Role.SALES_MANAGER, Role.ACCOUNTS].includes(role as any)) permissions.push('installments.view','installments.create','statements.view','reports.view');
   if ([Role.ADMIN, Role.SALES_MANAGER, Role.SALES_EXECUTIVE].includes(role as any)) permissions.push('calendar.view','calendar.create','calendar.edit');
   const grant = (...features: string[]) => permissions.push(...PERMISSION_KEYS.filter(p => features.includes(p.split('.')[0]) && !p.endsWith('.view')));

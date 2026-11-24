@@ -1,3 +1,4 @@
+import { LegacyModule } from './legacy/legacy.module';
 import { OperationsModule } from './operations/operations.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AccessModule } from './access/access.module';
@@ -35,6 +36,7 @@ import { DashboardModule } from "./dashboard/dashboard.module";
     PrismaModule,
     AccessModule,
     OperationsModule,
+    LegacyModule,
     AuthModule,
     UsersModule,
     ProjectsModule,

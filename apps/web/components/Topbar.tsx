@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Reminders from './OperationsUI';
 import Icon from "./Icon";
 const descriptions: Record<string, string> = {
+  'Legacy Sales & Targets': 'Explore historical sales and targets from your previous CRM.',
   "Roles & Access": "Decide which features each role can view and manage.",
   'Installments & Dues': 'Plan your collections and see every outstanding installment.',
   'Statements & Receipts': 'Clear customer balances and print-ready payment records.',

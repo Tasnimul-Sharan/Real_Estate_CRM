@@ -271,3 +271,31 @@ model Installment {
   @@unique([planId, sequence])
   @@index([dueDate])
 }
+
+model LegacyImport {
+  id             String         @id @default(cuid())
+  sourceDatabase String
+  sourceFile     String
+  sourceSha256   String         @unique
+  archiveSha256  String?
+  snapshotAt     String
+  importedAt     DateTime       @default(now())
+  recordCount    Int
+  sourceCounts   Json
+  reconciliation Json
+  records        LegacyRecord[]
+
+  @@index([snapshotAt])
+}
+
+model LegacyRecord {
+  id        String       @id @default(cuid())
+  importId  String
+  tableName String
+  sourceId  String
+  data      Json
+  import    LegacyImport @relation(fields: [importId], references: [id], onDelete: Cascade)
+
+  @@unique([importId, tableName, sourceId])
+  @@index([importId, tableName])
+}
