@@ -1,3 +1,4 @@
+import { HealthController } from './health.controller';
 import { LegacyModule } from './legacy/legacy.module';
 import { OperationsModule } from './operations/operations.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
@@ -20,9 +21,14 @@ import { PaymentsModule } from "./payments/payments.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
 
 @Module({
+  controllers: [HealthController],
   providers: [{ provide: APP_INTERCEPTOR, useClass: VisibilityInterceptor }],
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, validate: validateEnvironment }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env.local', '.env', '../../.env.local', '../../.env'],
+      validate: validateEnvironment,
+    }),
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],

@@ -1,4 +1,15 @@
 {
+  "name": "real-estate-crm",
+  "private": true,
+  "scripts": {
+    "build:api": "npm --prefix apps/api run prisma:generate && npm --prefix apps/api run build",
+    "build:web": "npm --prefix apps/web run build",
+    "build": "npm run build:api && npm run build:web",
+    "typecheck": "npm --prefix apps/api run typecheck && npm --prefix apps/web run typecheck",
+    "prisma:migrate": "npm --prefix apps/api run prisma:migrate",
+    "start:api": "npm --prefix apps/api run start:prod",
+    "start:web": "npm --prefix apps/web run start"
+  },
   "dependencies": {
     "@neon/config": "^1.14.6",
     "@neon/env": "^2.1.9"
